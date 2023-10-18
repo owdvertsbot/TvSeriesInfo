@@ -4,11 +4,9 @@ import requests
 from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
-# Your TMDb API key
-TMDB_API_KEY = '81cc1df77fb33a00b3b88dc5c3a26afe'
-
-# Telegram Bot token
-TELEGRAM_TOKEN = '6230370760:AAEhzNWVt6s8QHg48A3rw9bqmESwGOip1XI'
+# Retrieve environment variables
+TELEGRAM_TOKEN = os.environ.get("6230370760:AAEhzNWVt6s8QHg48A3rw9bqmESwGOip1XI")
+TMDB_API_KEY = os.environ.get("81cc1df77fb33a00b3b88dc5c3a26afe")
 
 # Set up logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
