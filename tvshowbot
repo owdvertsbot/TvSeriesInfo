@@ -5,10 +5,10 @@ from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
 # Your TMDb API key
-TMDB_API_KEY = 'your_tmdb_api_key'
+TMDB_API_KEY = '81cc1df77fb33a00b3b88dc5c3a26afe'
 
 # Telegram Bot token
-TELEGRAM_TOKEN = 'your_telegram_bot_token'
+TELEGRAM_TOKEN = '6230370760:AAEhzNWVt6s8QHg48A3rw9bqmESwGOip1XI'
 
 # Set up logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
