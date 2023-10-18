@@ -1,62 +1,66 @@
-import os
-import logging
+import telegram
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, InlineQueryHandler
 import requests
-from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
-# Retrieve environment variables
-TELEGRAM_TOKEN = os.environ.get("6230370760:AAEhzNWVt6s8QHg48A3rw9bqmESwGOip1XI")
-TMDB_API_KEY = os.environ.get("81cc1df77fb33a00b3b88dc5c3a26afe")
+# Initialize your Telegram Bot API Token and TMDB API Key
+TOKEN = "6230370760:AAEhzNWVt6s8QHg48A3rw9bqmESwGOip1XI"
+TMDB_API_KEY = "81cc1df77fb33a00b3b88dc5c3a26afe"
 
-# Set up logging
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+bot = telegram.Bot(token=TOKEN)
 
-# Initialize the bot
-bot = Bot(token=TELEGRAM_TOKEN)
-updater = Updater(token=TELEGRAM_TOKEN, use_context=True)
-dispatcher = updater.dispatcher
-
-# Command handler to start the bot
+# Create a function to handle the /start command
 def start(update, context):
-    user = update.effective_user
-    context.bot.send_message(chat_id=update.effective_chat.id, text=f"Hello, {user.mention_html()}! I can help you find information about TV shows. Use /search to look up a TV show.")
+    update.message.reply_text("Welcome to the TV Show Info Bot! Send me the name of a TV show to get information.")
 
-# Command handler to search for a TV show using TMDb API
-def search_tv_show(update, context):
-    user = update.effective_user
-    context.bot.send_message(chat_id=update.effective_chat.id, text=f"{user.mention_html()}, please enter the title of the TV show you want to search for.")
-
-# Handler for user's text input (TV show title)
-def handle_tv_show_input(update, context):
-    user_input = update.message.text
-    # Use the TMDb API to search for TV shows
-    search_url = f'https://api.themoviedb.org/3/search/tv'
-    params = {
-        'api_key': TMDB_API_KEY,
-        'query': user_input
-    }
-    response = requests.get(search_url, params=params)
-    data = response.json()
+# Create a function to handle the /showinfo command
+def show_info(update, context):
+    show_name = " ".join(context.args)  # Extract the show name from the user's message
+    response = requests.get(f"https://api.themoviedb.org/3/search/tv?api_key={TMDB_API_KEY}&query={show_name}")
     
-    if 'results' in data:
-        tv_shows = data['results']
-        if tv_shows:
-            # Display the first TV show found
-            tv_show = tv_shows[0]
-            name = tv_show.get('name', 'N/A')
-            overview = tv_show.get('overview', 'N/A')
-            first_air_date = tv_show.get('first_air_date', 'N/A')
-            context.bot.send_message(chat_id=update.effective_chat.id, text=f"Name: {name}\nFirst Air Date: {first_air_date}\nOverview: {overview}")
+    if response.status_code == 200:
+        data = response.json()
+        if data['results']:
+            show = data['results'][0]
+            title = show['name']
+            overview = show['overview']
+            release_date = show['first_air_date']
+            reply_text = f"Title: {title}\nOverview: {overview}\nRelease Date: {release_date}"
         else:
-            context.bot.send_message(chat_id=update.effective_chat.id, text="No results found for that TV show title.")
+            reply_text = "TV show not found."
     else:
-        context.bot.send_message(chat_id=update.effective_chat.id, text="An error occurred while searching for the TV show.")
+        reply_text = "An error occurred while fetching data."
 
-# Set up command and message handlers
-dispatcher.add_handler(CommandHandler('start', start))
-dispatcher.add_handler(CommandHandler('search', search_tv_show))
-dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_tv_show_input))
+    update.message.reply_text(reply_text)
 
-# Start the bot
-updater.start_polling()
-updater.idle()
+# Create a function to handle inline queries
+def inline_query(update, context):
+    query = update.inline_query.query
+    response = requests.get(f"https://api.themoviedb.org/3/search/tv?api_key={TMDB_API_KEY}&query={query}")
+    
+    if response.status_code == 200:
+        data = response.json()
+        results = [
+            telegram.InlineQueryResultArticle(
+                id=str(show['id']),
+                title=show['name'],
+                input_message_content=telegram.InputTextMessageContent(
+                    message_text=f"Title: {show['name']}\nOverview: {show['overview']}\nRelease Date: {show['first_air_date']}"
+                ),
+            )
+            for show in data['results']
+        ]
+        update.inline_query.answer(results)
+        
+def main():
+    updater = Updater(TOKEN, use_context=True)
+    dp = updater.dispatcher
+
+    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CommandHandler("showinfo", show_info, pass_args=True))
+    dp.add_handler(InlineQueryHandler(inline_query))
+    
+    updater.start_polling()
+    updater.idle()
+
+if __name__ == '__main__':
+    main()
