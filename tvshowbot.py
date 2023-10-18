@@ -4,7 +4,7 @@ import requests
 # Initialize your Pyrogram API ID and API HASH
 API_ID = "950903"
 API_HASH = "69d37ae7fdf5154293b01434044c37dd"
-TOKEN = "6230370760:AAEhzNWVt6s8QHg48A3rw9bqmESwGOip1XI"
+TOKEN = "6230370760:AAFx2IL5HpXA3PEeaGVmtK2R9cYTuhO4VP0"
 TMDB_API_KEY = "81cc1df77fb33a00b3b88dc5c3a26afe"
 
 app = Client("my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=TOKEN)
